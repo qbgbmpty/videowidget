@@ -21,28 +21,28 @@
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
-    <layout class="QHBoxLayout" name="horizontalLayout_9" stretch="1,1">
+    <layout class="QVBoxLayout" name="verticalLayout_8" stretch="4,3">
      <item>
-      <layout class="QVBoxLayout" name="verticalLayout_8" stretch="4,3">
+      <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,1">
        <item>
-        <layout class="QVBoxLayout" name="verticalLayout_2" stretch="10,1">
-         <property name="spacing">
-          <number>6</number>
-         </property>
+        <layout class="QVBoxLayout" name="verticalLayout_2" stretch="1,20,1">
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout" stretch="2,1">
+          <widget class="QLabel" name="label_8">
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Original film</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <layout class="QHBoxLayout" name="horizontalLayout" stretch="0">
            <item>
             <widget class="QVideoWidget" name="widget_1" native="true"/>
-           </item>
-           <item>
-            <layout class="QVBoxLayout" name="verticalLayout" stretch="1,1">
-             <item>
-              <widget class="QVideoWidget" name="widget_2" native="true"/>
-             </item>
-             <item>
-              <widget class="QVideoWidget" name="widget_3" native="true"/>
-             </item>
-            </layout>
            </item>
           </layout>
          </item>
@@ -88,7 +88,49 @@
         </layout>
        </item>
        <item>
-        <layout class="QVBoxLayout" name="verticalLayout_7" stretch="1,10">
+        <layout class="QVBoxLayout" name="verticalLayout_3" stretch="1,20,1">
+         <item>
+          <widget class="QLabel" name="label_7">
+           <property name="font">
+            <font>
+             <weight>75</weight>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>  Analysis result</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QChartView" name="linechart" native="true"/>
+         </item>
+         <item>
+          <widget class="QPushButton" name="SaveChart">
+           <property name="text">
+            <string>Save</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+      </layout>
+     </item>
+     <item>
+      <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="2,8">
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_4">
+         <item>
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string/>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <layout class="QVBoxLayout" name="verticalLayout_7" stretch="1,20">
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="1,4,1,4">
            <item>
@@ -128,23 +170,79 @@
           </layout>
          </item>
          <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="2,1">
+          <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="1,1,1">
            <item>
-            <widget class="QLabel" name="label">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
+            <layout class="QVBoxLayout" name="verticalLayout" stretch="1,15">
+             <item>
+              <widget class="QLabel" name="label_9">
+               <property name="font">
+                <font>
+                 <weight>75</weight>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>Particle Tracking</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignHCenter|Qt::AlignTop</set>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label">
+               <property name="enabled">
+                <bool>true</bool>
+               </property>
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
            <item>
-            <layout class="QVBoxLayout" name="verticalLayout_6" stretch="1,1">
+            <layout class="QVBoxLayout" name="verticalLayout_5" stretch="1,15">
+             <item>
+              <widget class="QLabel" name="label_10">
+               <property name="font">
+                <font>
+                 <weight>75</weight>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>Particle Detection</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignHCenter|Qt::AlignTop</set>
+               </property>
+              </widget>
+             </item>
              <item>
               <widget class="QLabel" name="label_2">
                <property name="text">
                 <string/>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <layout class="QVBoxLayout" name="verticalLayout_6" stretch="1,15">
+             <item>
+              <widget class="QLabel" name="label_11">
+               <property name="font">
+                <font>
+                 <weight>75</weight>
+                 <bold>true</bold>
+                </font>
+               </property>
+               <property name="text">
+                <string>Cell Detection</string>
+               </property>
+               <property name="alignment">
+                <set>Qt::AlignHCenter|Qt::AlignTop</set>
                </property>
               </widget>
              </item>
@@ -158,78 +256,6 @@
             </layout>
            </item>
           </layout>
-         </item>
-        </layout>
-       </item>
-      </layout>
-     </item>
-     <item>
-      <layout class="QVBoxLayout" name="verticalLayout_5" stretch="4,3">
-       <item>
-        <layout class="QVBoxLayout" name="verticalLayout_3" stretch="10,1">
-         <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_8" stretch="1,1">
-           <item>
-            <widget class="QVideoWidget" name="widget_4" native="true"/>
-           </item>
-           <item>
-            <widget class="QVideoWidget" name="widget_5" native="true"/>
-           </item>
-          </layout>
-         </item>
-         <item>
-          <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="1,1">
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_3">
-             <item>
-              <widget class="QPushButton" name="playButton_2">
-               <property name="text">
-                <string/>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QSlider" name="positionSlider_2">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item>
-            <layout class="QHBoxLayout" name="horizontalLayout_6">
-             <item>
-              <widget class="QPushButton" name="playButton_3">
-               <property name="text">
-                <string/>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QSlider" name="positionSlider_3">
-               <property name="orientation">
-                <enum>Qt::Horizontal</enum>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-          </layout>
-         </item>
-        </layout>
-       </item>
-       <item>
-        <layout class="QVBoxLayout" name="verticalLayout_4">
-         <item>
-          <widget class="QChartView" name="linechart" native="true"/>
-         </item>
-         <item>
-          <widget class="QPushButton" name="SaveChart">
-           <property name="text">
-            <string>Save</string>
-           </property>
-          </widget>
          </item>
         </layout>
        </item>

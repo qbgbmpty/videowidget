@@ -84,7 +84,7 @@ VideoPlayer::VideoPlayer(QWidget *parent)
     ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
 
     connect(ui->playButton, SIGNAL(clicked()), this, SLOT(play()));
-
+/*
     ui->playButton_2->setEnabled(false);
     ui->playButton_2->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
 
@@ -94,22 +94,22 @@ VideoPlayer::VideoPlayer(QWidget *parent)
     ui->playButton_3->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
 
     connect(ui->playButton_3, SIGNAL(clicked()), this, SLOT(play_particle_2()));
-
+*/
 
     ui->positionSlider->setRange(0, 0);
     connect(ui->positionSlider, SIGNAL(sliderMoved(int)), this, SLOT(setPosition(int)));
-
+/*
     ui->positionSlider_2->setRange(0, 0);
     connect(ui->positionSlider_2, SIGNAL(sliderMoved(int)), this, SLOT(setPosition_particle(int)));
 
     ui->positionSlider_3->setRange(0, 0);
     connect(ui->positionSlider_3, SIGNAL(sliderMoved(int)), this, SLOT(setPosition_particle_2(int)));
-
+*/
     mediaPlayer.setVideoOutput(ui->widget_1);
-    mediaPlayer_2.setVideoOutput(ui->widget_2);
-    mediaPlayer_3.setVideoOutput(ui->widget_3);
-    mediaPlayer_4.setVideoOutput(ui->widget_4);
-    mediaPlayer_5.setVideoOutput(ui->widget_5);
+    //mediaPlayer_2.setVideoOutput(ui->widget_2);
+    //mediaPlayer_3.setVideoOutput(ui->widget_3);
+    //mediaPlayer_4.setVideoOutput(ui->widget_4);
+    //mediaPlayer_5.setVideoOutput(ui->widget_5);
 
 
     connect(ui->comboBox, SIGNAL(activated(const QString &)), this,SLOT(particle()));
@@ -186,6 +186,10 @@ void VideoPlayer::Run()
         mediaPlayer_3.setMedia(QUrl::fromLocalFile(fileName_3));
         ui->playButton->setEnabled(true);
     }*/
+
+    ui->playButton->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
+    ui->positionSlider->setValue(15);
+    ui->positionSlider->setRange(0, 40);
 
     ui->comboBox_2->clear();
     ui->comboBox->clear();
@@ -452,12 +456,12 @@ void VideoPlayer::particle_time()
 
         QImage *image=new QImage(particleName);
         QPixmap *pixmap=new QPixmap();
-        int with = ui->label->width();
-        int height = ui->label->height();
+        int with = ui->label_2->width();
+        int height = ui->label_2->height();
         pixmap->convertFromImage(*image);
         QPixmap fitpixmap = pixmap->scaled(with, height, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-        ui->label->setPixmap(fitpixmap);
-        ui->label->setAlignment(Qt::AlignCenter);
+        ui->label_2->setPixmap(fitpixmap);
+        ui->label_2->setAlignment(Qt::AlignCenter);
 
         QString CellName = saveCellImgPath;
         CellName+="/";
@@ -562,26 +566,26 @@ void VideoPlayer::mediaStateChanged(QMediaPlayer::State state)
 
 void VideoPlayer::mediaStateChanged_particle(QMediaPlayer::State state)
 {
-    switch(state) {
+    /*switch(state) {
     case QMediaPlayer::PlayingState:
         ui->playButton_2->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
         break;
     default:
         ui->playButton_2->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
         break;
-    }
+    }*/
 }
 
 void VideoPlayer::mediaStateChanged_particle_2(QMediaPlayer::State state)
 {
-    switch(state) {
+    /*switch(state) {
     case QMediaPlayer::PlayingState:
         ui->playButton_3->setIcon(style()->standardIcon(QStyle::SP_MediaPause));
         break;
     default:
         ui->playButton_3->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
         break;
-    }
+    }*/
 }
 
 void VideoPlayer::positionChanged(qint64 position)
@@ -591,12 +595,12 @@ void VideoPlayer::positionChanged(qint64 position)
 
 void VideoPlayer::positionChanged_particle(qint64 position)
 {
-    ui->positionSlider_2->setValue(position);
+    //ui->positionSlider_2->setValue(position);
 }
 
 void VideoPlayer::positionChanged_particle_2(qint64 position)
 {
-    ui->positionSlider_3->setValue(position);
+    //ui->positionSlider_3->setValue(position);
 }
 
 void VideoPlayer::durationChanged(qint64 duration)
@@ -606,12 +610,12 @@ void VideoPlayer::durationChanged(qint64 duration)
 
 void VideoPlayer::durationChanged_particle(qint64 duration)
 {
-    ui->positionSlider_2->setRange(0, duration);
+   // ui->positionSlider_2->setRange(0, duration);
 }
 
 void VideoPlayer::durationChanged_particle_2(qint64 duration)
 {
-    ui->positionSlider_3->setRange(0, duration);
+    //ui->positionSlider_3->setRange(0, duration);
 }
 
 void VideoPlayer::setPosition(int position)
@@ -734,12 +738,12 @@ void VideoPlayer::processFinishedSlot(int,QProcess::ExitStatus)
         imagePath+="png";
         QImage *image=new QImage(imagePath);
         QPixmap *pixmap=new QPixmap();
-        int with = ui->label->width();
-        int height = ui->label->height();
+        int with = ui->label_2->width();
+        int height = ui->label_2->height();
         pixmap->convertFromImage(*image);
         QPixmap fitpixmap = pixmap->scaled(with, height, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-        ui->label->setPixmap(fitpixmap);
-        ui->label->setAlignment(Qt::AlignCenter);
+        ui->label_2->setPixmap(fitpixmap);
+        ui->label_2->setAlignment(Qt::AlignCenter);
 
         QString img_combo=_processParticleFileList.at(count).mid(_processParticleFileList.at(count).lastIndexOf("/")+1);
         img_combo=img_combo.mid(0,img_combo.lastIndexOf(".")+1);
@@ -993,7 +997,7 @@ void VideoPlayer::process2FinishedSlot(int,QProcess::ExitStatus)
         matlab_CPCD+='"';
         matlab_CPCD=matlab_CPCD.replace("`","\\`");
 
-        temp_process->start("/bin/sh",  QStringList()<< "-c"<<matlab_CPCD);
+        //temp_process->start("/bin/sh",  QStringList()<< "-c"<<matlab_CPCD);
         //qDebug()<<matlab_CPCD;
         processCell--;
         count++;
