@@ -38,6 +38,7 @@
 QStringList fileName;
 static QProcess *_process;
 static QProcess *_process2;
+static QProcess *_process_cal;
 QStringList _processParticleFileList;
 QStringList _processCellFileList;
 QString root;
@@ -53,7 +54,8 @@ QString saveCellCenterPath;
 QString saveCellAreaPath;
 QString Particle_1;
 QString Particle_2;
-int count, processParticle, processCell, obj_num;
+int count, processParticle, processCell, obj_num, cellImg_count, cal_count,img_count;
+int tracking_count;
 QString FirstParticle;
 
 VideoPlayer::VideoPlayer(QWidget *parent)
@@ -69,8 +71,13 @@ VideoPlayer::VideoPlayer(QWidget *parent)
 
     _process = new QProcess;
     _process2 = new QProcess;
+    _process_cal = new QProcess;
     connect(_process, SIGNAL(finished(int, QProcess::ExitStatus)),this, SLOT(processFinishedSlot(int, QProcess::ExitStatus)));
     connect(_process2, SIGNAL(finished(int, QProcess::ExitStatus)),this, SLOT(process2FinishedSlot(int, QProcess::ExitStatus)));
+    connect(_process_cal, SIGNAL(finished(int, QProcess::ExitStatus)),this, SLOT(process_cal_FinishedSlot(int, QProcess::ExitStatus)));
+
+    connect(this, SIGNAL(cal_trigger(int)),this, SLOT(cellImg_cal_queue(int)));
+    connect(this, SIGNAL(cell_image_trigger(int)),this, SLOT(cellImg_cal_queue(int)));
 
     ui->openButton->setText("Select Partical");
     ui->openButton_2->setText("Select Cell");
@@ -156,19 +163,15 @@ void VideoPlayer::openFile()
 {
     //fileName = QFileDialog::getOpenFileName(this, tr("Open Movie"),QDir::homePath());
     _processParticleFileList.clear();
-    _processParticleFileList = QFileDialog::getOpenFileNames();
-    processParticle=_processParticleFileList.size();
-
-
-
+    _processParticleFileList = QFileDialog::getOpenFileNames(this,"Select Partical");
 }
 
 void VideoPlayer::openFile_2()
 {
     //fileName = QFileDialog::getOpenFileName(this, tr("Open Movie"),QDir::homePath());
     _processCellFileList.clear();
-    _processCellFileList = QFileDialog::getOpenFileNames();
-    processCell=_processCellFileList.size();
+    _processCellFileList = QFileDialog::getOpenFileNames(this,"Select Cell");
+
 }
 
 void VideoPlayer::Run()
@@ -195,22 +198,16 @@ void VideoPlayer::Run()
     ui->comboBox->clear();
     obj_num=0;
     count=0;
-    /*QString combo=fileName.mid(0,fileName.lastIndexOf("."));
-    QString Line;
+    cellImg_count=0;
+    cal_count=0;
+    img_count=0;
+    processParticle=_processParticleFileList.size();
+    processCell=_processCellFileList.size();
+    ui->label->clear();
+    ui->label_2->clear();
+    ui->label_3->clear();
 
-    //宣告檔案
-    QFile file(combo);
-    //Open
-    file.open(QIODevice::ReadOnly);
-    QTextStream streamread(&file);
-    //讀
-    //一次讀一行的寫法
-    while(!streamread.atEnd())
-    {
-        Line = streamread.readLine();
-        ui->comboBox->addItem(Line);
-    }
-    file.close();*/
+
 
 
 
@@ -273,6 +270,9 @@ void VideoPlayer::Run()
                     temp->mkdir(Fullfolder);
                     temp->mkdir(Centerfolder);
                     temp->mkdir(ParticleArea);
+                    temp->mkdir(Imgfolder+"/single_mask");
+                    for (int i=0; i<_processParticleFileList.size(); i++)
+                        temp->mkdir(Imgfolder+"/single_mask/"+QString::number(i+1));
                     break;
                 }
             }
@@ -315,6 +315,11 @@ void VideoPlayer::Run()
             command+=saveParticleCenterPath;
             command+=" ";
             command+=saveParticleAreaPath;
+            command+=" ";
+            command+=saveParticleImgPath;
+            command+="/single_mask/1";
+            command+=" 0";
+
             //QString tmp_file=_processParticleFileList.at(0);
             //QString file_name=tmp_file.replace("\"", "");
 
@@ -345,23 +350,11 @@ void VideoPlayer::Run()
 
             _process->start("/bin/sh", QStringList()<<"-c"<<command);
 
-           /* command="python3 prediction.py ";
-            command+=_processCellFileList.at(0);
-            command=command.replace("`","\\`");
-            command+=" ";
-            command+=saveCellImgPath;
-            command+=" ";
-            command+=saveCellBorderPath;
-            command+=" ";
-            command+=saveCellFullPath;
-            command+=" ";
-            command+=saveCellCenterPath;
-            //QString tmp_file=_processParticleFileList.at(0);
-            //QString file_name=tmp_file.replace("\"", "");
-            _process2->start("/bin/sh", QStringList()<<"-c"<<command);*/
-
             ui->openButton->setEnabled(false);
             ui->openButton_2->setEnabled(false);
+            ui->runButton->setEnabled(false);
+
+
         }
 
     }
@@ -426,6 +419,42 @@ void VideoPlayer::particle()
         cahrtPath+="/recordParticleandCellDistance/ParticleandCellProcessDistance.txt";
         createLineChart(cahrtPath,ui->comboBox->currentIndex()+1);
 
+        QString index;
+        QString ObjectProcessPath=root;
+        ObjectProcessPath+="/TrackingProcess/recordObjectProcess/ObjectProcess";
+        ObjectProcessPath+=QString::number(ui->comboBox_2->currentIndex()+1);
+        ObjectProcessPath+=".txt";
+        QFile file(ObjectProcessPath);
+        //Open
+        file.open(QIODevice::ReadOnly);
+        QTextStream streamread(&file);
+        //讀
+        //一次讀一行的寫法
+        for ( int i=0; i<=ui->comboBox->currentIndex(); i++)
+            index = streamread.readLine();
+        //close
+        file.close();
+
+        QString FileName=_processParticleFileList.at(ui->comboBox_2->currentIndex());
+        FileName=FileName.mid(FileName.lastIndexOf("/")+1);
+        QString particleName = saveParticleImgPath;
+        particleName+="/single_mask/";
+        particleName+=QString::number(ui->comboBox_2->currentIndex()+1);
+        particleName+="/";
+        particleName+=FileName;
+        particleName=particleName.mid(0,particleName.lastIndexOf("."));
+        particleName+="_";
+        particleName+=index;
+        particleName+=".png";
+
+        QImage *image=new QImage(particleName);
+        QPixmap *pixmap=new QPixmap();
+        int with = ui->label->width();
+        int height = ui->label->height();
+        pixmap->convertFromImage(*image);
+        QPixmap fitpixmap = pixmap->scaled(with, height, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        ui->label->setPixmap(fitpixmap);
+        ui->label->setAlignment(Qt::AlignCenter);
 /*
         QString imagePath=fileName.mid(0,fileName.lastIndexOf("/")+1);
         imagePath+="object";
@@ -468,7 +497,7 @@ void VideoPlayer::particle_time()
         CellName+=_processCellFileList.at(ui->comboBox_2->currentIndex()).mid(_processCellFileList.at(ui->comboBox_2->currentIndex()).lastIndexOf("/")+1);
         CellName=CellName.mid(0,CellName.lastIndexOf('.'));
         CellName+=".png";
-        qDebug()<<CellName;
+        //qDebug()<<CellName;
 
         QImage *Cellimage=new QImage(CellName);
         QPixmap *Cellpixmap=new QPixmap();
@@ -479,7 +508,46 @@ void VideoPlayer::particle_time()
         ui->label_3->setPixmap(Cellfitpixmap);
         ui->label_3->setAlignment(Qt::AlignCenter);
 
+        QString cahrtPath=root;
+        cahrtPath+="/recordParticleandCellDistance/ParticleandCellProcessDistance.txt";
+        createLineChart(cahrtPath,ui->comboBox->currentIndex()+1);
 
+        QString index;
+        QString ObjectProcessPath=root;
+        ObjectProcessPath+="/TrackingProcess/recordObjectProcess/ObjectProcess";
+        ObjectProcessPath+=QString::number(ui->comboBox_2->currentIndex()+1);
+        ObjectProcessPath+=".txt";
+        QFile file(ObjectProcessPath);
+        //Open
+        file.open(QIODevice::ReadOnly);
+        QTextStream streamread(&file);
+        //讀
+        //一次讀一行的寫法
+        for ( int i=0; i<=ui->comboBox->currentIndex(); i++)
+            index = streamread.readLine();
+        //close
+        file.close();
+
+        QString FileName=_processParticleFileList.at(ui->comboBox_2->currentIndex());
+        FileName=FileName.mid(FileName.lastIndexOf("/")+1);
+        QString single_particleName = saveParticleImgPath;
+        single_particleName+="/single_mask/";
+        single_particleName+=QString::number(ui->comboBox_2->currentIndex()+1);
+        single_particleName+="/";
+        single_particleName+=FileName;
+        single_particleName=single_particleName.mid(0,single_particleName.lastIndexOf("."));
+        single_particleName+="_";
+        single_particleName+=index;
+        single_particleName+=".png";
+
+        QImage *single_image=new QImage(single_particleName);
+        QPixmap *single_pixmap=new QPixmap();
+        int single_with = ui->label->width();
+        int single_height = ui->label->height();
+        pixmap->convertFromImage(*image);
+        QPixmap single_fitpixmap = single_pixmap->scaled(single_with, single_height, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        ui->label->setPixmap(single_fitpixmap);
+        ui->label->setAlignment(Qt::AlignCenter);
     }
     /*if (!ui->comboBox_2->currentText().isEmpty()) {
         QString imagePath=fileName.mid(0,fileName.lastIndexOf("/")+1);
@@ -526,6 +594,46 @@ void VideoPlayer::particle_time()
         ui->label_3->setPixmap(fitpixmap_2);
         ui->label_3->setAlignment(Qt::AlignCenter);
     }*/
+    if (!ui->comboBox_2->currentText().isEmpty() && !ui->comboBox->currentText().isEmpty())
+    {
+        QString index;
+        QString ObjectProcessPath=root;
+        ObjectProcessPath+="/TrackingProcess/recordObjectProcess/ObjectProcess";
+        ObjectProcessPath+=QString::number(ui->comboBox_2->currentIndex()+1);
+        ObjectProcessPath+=".txt";
+        QFile file(ObjectProcessPath);
+        //Open
+        file.open(QIODevice::ReadOnly);
+        QTextStream streamread(&file);
+        //讀
+        //一次讀一行的寫法
+        for ( int i=0; i<=ui->comboBox->currentIndex(); i++)
+            index = streamread.readLine();
+        //close
+        file.close();
+
+        QString FileName=_processParticleFileList.at(ui->comboBox_2->currentIndex());
+        FileName=FileName.mid(FileName.lastIndexOf("/")+1);
+        QString particleName = saveParticleImgPath;
+        particleName+="/single_mask/";
+        particleName+=QString::number(ui->comboBox_2->currentIndex()+1);
+        particleName+="/";
+        particleName+=FileName;
+        particleName=particleName.mid(0,particleName.lastIndexOf("."));
+        particleName+="_";
+        particleName+=index;
+        particleName+=".png";
+
+        QImage *image=new QImage(particleName);
+        QPixmap *pixmap=new QPixmap();
+        int with = ui->label->width();
+        int height = ui->label->height();
+        pixmap->convertFromImage(*image);
+        QPixmap fitpixmap = pixmap->scaled(with, height, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        ui->label->setPixmap(fitpixmap);
+        ui->label->setAlignment(Qt::AlignCenter);
+    }
+
 }
 
 void VideoPlayer::play_particle()
@@ -643,6 +751,7 @@ void VideoPlayer::handleError()
 
 QChart *VideoPlayer::createLineChart(QString path, int index) const
 {
+    //double particleMax=0;
     QChart *chart = new QChart();
     QString title="particle";
     title+=QString::number(ui->comboBox->currentIndex()+1,10);
@@ -672,6 +781,8 @@ QChart *VideoPlayer::createLineChart(QString path, int index) const
         if (!particlelist.at(i).isEmpty())
         {
             series->append(i+1,particlelist.at(i).toDouble());
+            /*if (particlelist.at(i).toDouble()>particleMax)
+                particleMax=particlelist.at(i).toDouble();*/
     //      ui->comboBox_2->addItem(QString::number(i+1,10));
         }
 
@@ -699,17 +810,17 @@ QChart *VideoPlayer::createLineChart(QString path, int index) const
     chart->legend()->hide(); //隱藏圖例
 
 
-
-/*    axisX->setRange(0,particlelist.length()-1);   //設置X座標範圍
+/*
+    axisX->setRange(0,particlelist.length()-1);   //設置X座標範圍
     axisX->setTitleText("time"); //設置X座標名字
 
-    axisY->setRange(0,int(particleMax+5));
+    axisY->setRange(0,int(particleMax));
     axisY->setTitleText("distance");
-
-    //別忘記把座標軸添加到chart
-    chart->setAxisX(axisX, series);  //並且XY軸的位置是上和右
-    chart->setAxisY(axisY, series);
 */
+    //別忘記把座標軸添加到chart
+//    chart->setAxisX(axisX, series);  //並且XY軸的位置是上和右
+    //chart->setAxisY(axisY, series);
+
     ui->linechart->setChart(chart);
     ui->linechart->setRenderHint(QPainter::Antialiasing);
 }
@@ -732,6 +843,32 @@ void VideoPlayer::processFinishedSlot(int,QProcess::ExitStatus)
 {
     if (processParticle>=1)
     {
+        QString cal_obj_num;
+        cal_obj_num+=saveParticleCenterPath;
+        cal_obj_num+=_processParticleFileList.at(0).mid(_processParticleFileList.at(0).lastIndexOf("/"));
+        cal_obj_num=cal_obj_num.mid(0,cal_obj_num.lastIndexOf("."));
+        cal_obj_num+=".txt";
+        //qDebug()<<cal_obj_num;
+        QString Line;
+
+        //宣告檔案
+        QFile file(cal_obj_num);
+        //Open
+        file.open(QIODevice::ReadOnly);
+        QTextStream streamread(&file);
+        //讀
+        //一次讀一行的寫法
+        if (ui->comboBox->count()==0)
+        {
+            while(!streamread.atEnd())
+            {
+                Line = streamread.readLine();
+                obj_num++;
+                ui->comboBox->addItem(QString::number(obj_num,10));
+            }
+        }
+        file.close();
+
         QString imagePath=saveParticleImgPath;
         imagePath+=_processParticleFileList.at(count).mid(_processParticleFileList.at(count).lastIndexOf("/"));
         imagePath=imagePath.mid(0,imagePath.lastIndexOf(".")+1);
@@ -753,6 +890,8 @@ void VideoPlayer::processFinishedSlot(int,QProcess::ExitStatus)
 
         if (count==0)
         {
+            tracking_count=0;
+
             QProcess *temp_process=new QProcess;
             QString init="/home/ppcb/MATLAB/R2015b/bin/glnxa64/MATLAB -nodesktop -nosplash -r ";
             init+='"';
@@ -772,8 +911,9 @@ void VideoPlayer::processFinishedSlot(int,QProcess::ExitStatus)
             //qDebug()<<init;
         }
         else
-        {
+        {           
             QProcess *temp_process=new QProcess;
+            connect(temp_process, SIGNAL(finished(int, QProcess::ExitStatus)),this, SLOT(Tracking_image(int, QProcess::ExitStatus)));
             QString matlab_RPP="/home/ppcb/MATLAB/R2015b/bin/glnxa64/MATLAB -nodesktop -nosplash -r ";
             matlab_RPP+='"';
             matlab_RPP+="record_particle_process(";
@@ -828,7 +968,6 @@ void VideoPlayer::processFinishedSlot(int,QProcess::ExitStatus)
             matlab_RPP=matlab_RPP.replace("`","\\`");
 
             temp_process->start("/bin/sh",  QStringList()<< "-c"<<matlab_RPP);
-            //qDebug()<<matlab_RPP;
         }
 
         processParticle--;
@@ -846,39 +985,6 @@ void VideoPlayer::processFinishedSlot(int,QProcess::ExitStatus)
 
 
 
-        QString checkFileExists;
-        checkFileExists=root;
-        checkFileExists+="/TrackingProcess/recordObjectProcess/ObjectProcess.txt";
-        QFileInfo fileInfo(checkFileExists);
-        while(!fileInfo.isFile())
-        {
-            continue;
-        }
-
-
-        QString cal_obj_num;
-        cal_obj_num+=saveParticleCenterPath;
-        cal_obj_num+=_processParticleFileList.at(0).mid(_processParticleFileList.at(0).lastIndexOf("/"));
-        cal_obj_num=cal_obj_num.mid(0,cal_obj_num.lastIndexOf("."));
-        cal_obj_num+=".txt";
-        qDebug()<<cal_obj_num;
-        QString Line;
-
-        //宣告檔案
-        QFile file(cal_obj_num);
-        //Open
-        file.open(QIODevice::ReadOnly);
-        QTextStream streamread(&file);
-        //讀
-        //一次讀一行的寫法
-        while(!streamread.atEnd())
-        {
-            Line = streamread.readLine();
-            obj_num++;
-            ui->comboBox->addItem(QString::number(obj_num,10));
-        }
-        file.close();
-
 
         count=0;
         QString fileName = "python3 prediction.py ";
@@ -894,7 +1000,9 @@ void VideoPlayer::processFinishedSlot(int,QProcess::ExitStatus)
         fileName+=saveCellCenterPath;
         fileName+=" ";
         fileName+=saveCellAreaPath;
-        qDebug()<<fileName;
+        fileName+=" 1";
+        fileName+=" 1";
+        //qDebug()<<fileName;
         _process2->start("/bin/sh",  QStringList()<< "-c"<<fileName);
 
 
@@ -918,6 +1026,12 @@ void VideoPlayer::processFinishedSlot(int,QProcess::ExitStatus)
         fileName+=saveParticleCenterPath;
         fileName+=" ";
         fileName+=saveParticleAreaPath;
+        fileName+=" ";
+        fileName+=saveParticleImgPath;
+        fileName+="/single_mask/";
+        fileName+=QString::number(count+1);
+        fileName+=" 0";
+
 
         _process->start("/bin/sh",  QStringList()<< "-c"<<fileName);
         //qDebug()<<fileName;
@@ -928,14 +1042,7 @@ void VideoPlayer::processFinishedSlot(int,QProcess::ExitStatus)
 void VideoPlayer::process2FinishedSlot(int,QProcess::ExitStatus)
 {
     if (processCell>=1)
-    {      
-        if (count >0)
-        {
-            QString cahrtPath=root;
-            cahrtPath+="/recordParticleandCellDistance/ParticleandCellProcessDistance.txt";
-            createLineChart(cahrtPath,ui->comboBox->currentIndex()+1);
-        }
-
+    {
         QString CellName = saveCellImgPath;
         CellName+=_processCellFileList.at(count).mid(_processCellFileList.at(count).lastIndexOf("/"));
         CellName=CellName.mid(0,CellName.lastIndexOf(".")+1);
@@ -950,71 +1057,21 @@ void VideoPlayer::process2FinishedSlot(int,QProcess::ExitStatus)
         ui->label_3->setPixmap(Cellfitpixmap);
         ui->label_3->setAlignment(Qt::AlignCenter);
 
-        QProcess *temp_process=new QProcess;
-        QString matlab_CPCD="/home/ppcb/MATLAB/R2015b/bin/glnxa64/MATLAB -nodesktop -nosplash -r ";
-        matlab_CPCD+='"';
-        matlab_CPCD+="calculate_particle_and_cell_distance(";
-        matlab_CPCD+=QString::number(_processCellFileList.size());
-        matlab_CPCD+=",1040,1392,'";
-
-        matlab_CPCD+=root;
-        matlab_CPCD+="','";
-
-        matlab_CPCD+=saveCellFullPath;
-        matlab_CPCD+=_processCellFileList.at(count).mid(_processCellFileList.at(count).lastIndexOf("/"));
-        matlab_CPCD=matlab_CPCD.mid(0,matlab_CPCD.lastIndexOf("."));
-        matlab_CPCD+=".txt";
-        matlab_CPCD+="','";
-
-        matlab_CPCD+=saveCellBorderPath;
-        matlab_CPCD+=_processCellFileList.at(count).mid(_processCellFileList.at(count).lastIndexOf("/"));
-        matlab_CPCD=matlab_CPCD.mid(0,matlab_CPCD.lastIndexOf("."));
-        matlab_CPCD+=".txt";
-        matlab_CPCD+="','";
-
-        matlab_CPCD+=saveParticleFullPath;
-        matlab_CPCD+=_processParticleFileList.at(count).mid(_processParticleFileList.at(count).lastIndexOf("/"));
-        matlab_CPCD=matlab_CPCD.mid(0,matlab_CPCD.lastIndexOf("."));
-        matlab_CPCD+=".txt";
-        matlab_CPCD+="','";
-
-        matlab_CPCD+=saveParticleBorderPath;
-        matlab_CPCD+=_processParticleFileList.at(count).mid(_processParticleFileList.at(count).lastIndexOf("/"));
-        matlab_CPCD=matlab_CPCD.mid(0,matlab_CPCD.lastIndexOf("."));
-        matlab_CPCD+=".txt";
-        matlab_CPCD+="','";
-
-        matlab_CPCD+=root;
-        matlab_CPCD+="/Plist.txt";
-        matlab_CPCD+="','";
-
-        matlab_CPCD+=root;
-        matlab_CPCD+="/Clist.txt";
-        matlab_CPCD+="',";
-
-        matlab_CPCD+=QString::number(count+1);
-        matlab_CPCD+=");quit";
-        matlab_CPCD+='"';
-        matlab_CPCD=matlab_CPCD.replace("`","\\`");
-
-        //temp_process->start("/bin/sh",  QStringList()<< "-c"<<matlab_CPCD);
-        //qDebug()<<matlab_CPCD;
+        emit cell_image_trigger(0);
         processCell--;
-        count++;
+        img_count++;
+
     }
 
     if (processCell== 0)
     {
-        QString cahrtPath=root;
-        cahrtPath+="/recordParticleandCellDistance/ParticleandCellProcessDistance.txt";
-        createLineChart(cahrtPath,count);
+
 
         //_processCellFileList.clear();
         //_processParticleFileList.clear();
 
         //QMessageBox::information(this, "P&C","Success!");
-        ui->openButton_2->setEnabled(true);
-        ui->openButton->setEnabled(true);    
+
 
         return;
     }
@@ -1023,7 +1080,7 @@ void VideoPlayer::process2FinishedSlot(int,QProcess::ExitStatus)
     if (processCell>= 1)
     {
         QString fileName = "python3 prediction.py ";
-        fileName+=_processCellFileList.at(count);
+        fileName+=_processCellFileList.at(img_count);
         fileName=fileName.replace("`","\\`");
         fileName+=" ";
         fileName+=saveCellImgPath;
@@ -1035,8 +1092,254 @@ void VideoPlayer::process2FinishedSlot(int,QProcess::ExitStatus)
         fileName+=saveCellCenterPath;
         fileName+=" ";
         fileName+=saveCellAreaPath;
+        fileName+=" 1";
+        fileName+=" 1";
 
+        //qDebug()<<fileName;
         _process2->start("/bin/sh",  QStringList()<< "-c"<<fileName);
     }
 
 }
+
+void VideoPlayer::cellImg_cal_queue(int sender)
+{
+    if (sender==0)
+    {
+        cellImg_count++;
+        if (count==0)
+        {
+            QString matlab_CPCD="/home/ppcb/MATLAB/R2015b/bin/glnxa64/MATLAB -nodesktop -nosplash -r ";
+            matlab_CPCD+='"';
+            matlab_CPCD+="calculate_particle_and_cell_distance(";
+            matlab_CPCD+=QString::number(_processCellFileList.size());
+            matlab_CPCD+=",1040,1392,'";
+
+            matlab_CPCD+=root;
+            matlab_CPCD+="','";
+
+            matlab_CPCD+=saveCellFullPath;
+            matlab_CPCD+=_processCellFileList.at(count).mid(_processCellFileList.at(count).lastIndexOf("/"));
+            matlab_CPCD=matlab_CPCD.mid(0,matlab_CPCD.lastIndexOf("."));
+            matlab_CPCD+=".txt";
+            matlab_CPCD+="','";
+
+            matlab_CPCD+=saveCellBorderPath;
+            matlab_CPCD+=_processCellFileList.at(count).mid(_processCellFileList.at(count).lastIndexOf("/"));
+            matlab_CPCD=matlab_CPCD.mid(0,matlab_CPCD.lastIndexOf("."));
+            matlab_CPCD+=".txt";
+            matlab_CPCD+="','";
+
+            matlab_CPCD+=saveParticleFullPath;
+            matlab_CPCD+=_processParticleFileList.at(count).mid(_processParticleFileList.at(count).lastIndexOf("/"));
+            matlab_CPCD=matlab_CPCD.mid(0,matlab_CPCD.lastIndexOf("."));
+            matlab_CPCD+=".txt";
+            matlab_CPCD+="','";
+
+            matlab_CPCD+=saveParticleBorderPath;
+            matlab_CPCD+=_processParticleFileList.at(count).mid(_processParticleFileList.at(count).lastIndexOf("/"));
+            matlab_CPCD=matlab_CPCD.mid(0,matlab_CPCD.lastIndexOf("."));
+            matlab_CPCD+=".txt";
+            matlab_CPCD+="','";
+
+            matlab_CPCD+=root;
+            matlab_CPCD+="/Plist.txt";
+            matlab_CPCD+="','";
+
+            matlab_CPCD+=root;
+            matlab_CPCD+="/Clist.txt";
+            matlab_CPCD+="',";
+
+            matlab_CPCD+=QString::number(count+1);
+            matlab_CPCD+=");quit";
+            matlab_CPCD+='"';
+            matlab_CPCD=matlab_CPCD.replace("`","\\`");
+
+            _process_cal->start("/bin/sh",  QStringList()<< "-c"<<matlab_CPCD);
+            //qDebug()<<matlab_CPCD;
+
+            count++;
+        }
+    }
+    if (sender==1)
+    {
+        cal_count++;
+        if( cal_count==_processParticleFileList.size())
+        {
+            QString cahrtPath=root;
+            cahrtPath+="/recordParticleandCellDistance/ParticleandCellProcessDistance.txt";
+            createLineChart(cahrtPath,ui->comboBox->currentIndex()+1);
+            ui->openButton_2->setEnabled(true);
+            ui->openButton->setEnabled(true);
+            ui->runButton->setEnabled(true);
+            return;
+        }
+        else if (cellImg_count<=cal_count)
+            emit cal_trigger(1);
+        else if ( cellImg_count>cal_count)
+        {
+            QString cahrtPath=root;
+            cahrtPath+="/recordParticleandCellDistance/ParticleandCellProcessDistance.txt";
+            createLineChart(cahrtPath,ui->comboBox->currentIndex()+1);
+
+            QString matlab_CPCD="/home/ppcb/MATLAB/R2015b/bin/glnxa64/MATLAB -nodesktop -nosplash -r ";
+            matlab_CPCD+='"';
+            matlab_CPCD+="calculate_particle_and_cell_distance(";
+            matlab_CPCD+=QString::number(_processCellFileList.size());
+            matlab_CPCD+=",1040,1392,'";
+
+            matlab_CPCD+=root;
+            matlab_CPCD+="','";
+
+            matlab_CPCD+=saveCellFullPath;
+            matlab_CPCD+=_processCellFileList.at(count).mid(_processCellFileList.at(count).lastIndexOf("/"));
+            matlab_CPCD=matlab_CPCD.mid(0,matlab_CPCD.lastIndexOf("."));
+            matlab_CPCD+=".txt";
+            matlab_CPCD+="','";
+
+            matlab_CPCD+=saveCellBorderPath;
+            matlab_CPCD+=_processCellFileList.at(count).mid(_processCellFileList.at(count).lastIndexOf("/"));
+            matlab_CPCD=matlab_CPCD.mid(0,matlab_CPCD.lastIndexOf("."));
+            matlab_CPCD+=".txt";
+            matlab_CPCD+="','";
+
+            matlab_CPCD+=saveParticleFullPath;
+            matlab_CPCD+=_processParticleFileList.at(count).mid(_processParticleFileList.at(count).lastIndexOf("/"));
+            matlab_CPCD=matlab_CPCD.mid(0,matlab_CPCD.lastIndexOf("."));
+            matlab_CPCD+=".txt";
+            matlab_CPCD+="','";
+
+            matlab_CPCD+=saveParticleBorderPath;
+            matlab_CPCD+=_processParticleFileList.at(count).mid(_processParticleFileList.at(count).lastIndexOf("/"));
+            matlab_CPCD=matlab_CPCD.mid(0,matlab_CPCD.lastIndexOf("."));
+            matlab_CPCD+=".txt";
+            matlab_CPCD+="','";
+
+            matlab_CPCD+=root;
+            matlab_CPCD+="/Plist.txt";
+            matlab_CPCD+="','";
+
+            matlab_CPCD+=root;
+            matlab_CPCD+="/Clist.txt";
+            matlab_CPCD+="',";
+
+            matlab_CPCD+=QString::number(count+1);
+            matlab_CPCD+=");quit";
+            matlab_CPCD+='"';
+            matlab_CPCD=matlab_CPCD.replace("`","\\`");
+
+            _process_cal->start("/bin/sh",  QStringList()<< "-c"<<matlab_CPCD);
+            //qDebug()<<matlab_CPCD;
+
+            count++;
+        }
+
+
+    }
+}
+
+void VideoPlayer::process_cal_FinishedSlot(int,QProcess::ExitStatus)
+{
+    emit cal_trigger(1);
+}
+
+void VideoPlayer::Tracking_image(int,QProcess::ExitStatus)
+{
+    tracking_count++;
+    qDebug()<<tracking_count;
+    if (tracking_count>1)
+    {
+        QString index;
+        QString ObjectProcessPath=root;
+        ObjectProcessPath+="/TrackingProcess/recordObjectProcess/ObjectProcess";
+        ObjectProcessPath+=QString::number(tracking_count-1);
+        ObjectProcessPath+=".txt";
+        QFile file(ObjectProcessPath);
+        //Open
+        file.open(QIODevice::ReadOnly);
+        QTextStream streamread(&file);
+        //讀
+        //一次讀一行的寫法
+        for ( int i=0; i<=ui->comboBox->currentIndex(); i++)
+            index = streamread.readLine();
+        //close
+        file.close();
+
+
+        QString FileName=_processParticleFileList.at(tracking_count-1);
+        FileName=FileName.mid(FileName.lastIndexOf("/")+1);
+        QString particleName = saveParticleImgPath;
+        particleName+="/single_mask/";
+        particleName+=QString::number(tracking_count-1);
+        particleName+="/";
+        particleName+=FileName;
+        particleName=particleName.mid(0,particleName.lastIndexOf("."));
+        particleName+="_";
+        particleName+=index;
+        particleName+=".png";
+
+        QImage *image=new QImage(particleName);
+        QPixmap *pixmap=new QPixmap();
+        int with = ui->label->width();
+        int height = ui->label->height();
+        pixmap->convertFromImage(*image);
+        QPixmap fitpixmap = pixmap->scaled(with, height, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        ui->label->setPixmap(fitpixmap);
+        ui->label->setAlignment(Qt::AlignCenter);
+
+        if (tracking_count==_processParticleFileList.size()-1)
+        {
+            QString index;
+            QString ObjectProcessPath=root;
+            ObjectProcessPath+="/TrackingProcess/recordObjectProcess/ObjectProcess";
+            ObjectProcessPath+=QString::number(tracking_count);
+            ObjectProcessPath+=".txt";
+            QFile file(ObjectProcessPath);
+            //Open
+            file.open(QIODevice::ReadOnly);
+            QTextStream streamread(&file);
+            //讀
+            //一次讀一行的寫法
+            for ( int i=0; i<=ui->comboBox->currentIndex(); i++)
+                index = streamread.readLine();
+            //close
+            file.close();
+
+
+            QString FileName=_processParticleFileList.at(tracking_count);
+            FileName=FileName.mid(FileName.lastIndexOf("/")+1);
+            QString particleName = saveParticleImgPath;
+            particleName+="/single_mask/";
+            particleName+=QString::number(tracking_count+1);
+            particleName+="/";
+            particleName+=FileName;
+            particleName=particleName.mid(0,particleName.lastIndexOf("."));
+            particleName+="_";
+            particleName+=index;
+            particleName+=".png";
+
+            QImage *image=new QImage(particleName);
+            QPixmap *pixmap=new QPixmap();
+            int with = ui->label->width();
+            int height = ui->label->height();
+            pixmap->convertFromImage(*image);
+            QPixmap fitpixmap = pixmap->scaled(with, height, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+            ui->label->setPixmap(fitpixmap);
+            ui->label->setAlignment(Qt::AlignCenter);
+            qDebug()<<particleName;
+        }
+        qDebug()<<particleName;
+        //
+    }
+
+
+    /*QString checkFileExists;
+    checkFileExists=root;
+    checkFileExists+="/TrackingProcess/recordObjectProcess/ObjectProcess.txt";
+    QFileInfo fileInfo(checkFileExists);
+    while(!fileInfo.isFile())
+    {
+        continue;
+    }*/
+
+}
+

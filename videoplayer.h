@@ -73,6 +73,10 @@ public:
     VideoPlayer(QWidget *parent = 0);
     ~VideoPlayer();
 
+signals:
+    void cal_trigger(int sender);
+    void cell_image_trigger(int sender);
+
 public slots:
     void openFile();
     void openFile_2();
@@ -104,6 +108,10 @@ private slots:
 
     void processFinishedSlot(int,QProcess::ExitStatus);
     void process2FinishedSlot(int,QProcess::ExitStatus);
+    void process_cal_FinishedSlot(int,QProcess::ExitStatus);
+    void Tracking_image(int,QProcess::ExitStatus);
+    void cellImg_cal_queue(int sender);
+
 
 private:
     QMediaPlayer mediaPlayer;

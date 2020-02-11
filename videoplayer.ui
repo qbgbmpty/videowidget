@@ -21,7 +21,7 @@
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
-    <layout class="QVBoxLayout" name="verticalLayout_8" stretch="4,3">
+    <layout class="QVBoxLayout" name="verticalLayout_10" stretch="1,1">
      <item>
       <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="1,1">
        <item>
@@ -117,15 +117,68 @@
       </layout>
      </item>
      <item>
-      <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="2,8">
+      <layout class="QHBoxLayout" name="horizontalLayout_7" stretch="1,5">
        <item>
-        <layout class="QVBoxLayout" name="verticalLayout_4">
+        <layout class="QVBoxLayout" name="verticalLayout_9" stretch="1,1">
          <item>
-          <widget class="QLabel" name="label_6">
-           <property name="text">
-            <string/>
-           </property>
-          </widget>
+          <layout class="QVBoxLayout" name="verticalLayout_8" stretch="1,10">
+           <item>
+            <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="5,2,1,2">
+             <item>
+              <widget class="QLabel" name="label_12">
+               <property name="text">
+                <string>Now analizing: image</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_13">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_14">
+               <property name="text">
+                <string>/</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_15">
+               <property name="text">
+                <string/>
+               </property>
+              </widget>
+             </item>
+            </layout>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_16">
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item>
+          <layout class="QVBoxLayout" name="verticalLayout_4" stretch="1,10">
+           <item>
+            <widget class="QLabel" name="label_6">
+             <property name="text">
+              <string>Instant analysis status</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QTextBrowser" name="textBrowser"/>
+           </item>
+          </layout>
          </item>
         </layout>
        </item>
