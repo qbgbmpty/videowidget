@@ -76,6 +76,7 @@ public:
 signals:
     void cal_trigger(int sender);
     void cell_image_trigger(int sender);
+    void set_variable();
 
 public slots:
     void openFile();
@@ -84,8 +85,7 @@ public slots:
     void play();
     void particle();
     void particle_time();
-    void play_particle();
-    void play_particle_2();
+
 
 private slots:
     void mediaStateChanged(QMediaPlayer::State state);
@@ -96,13 +96,12 @@ private slots:
     void mediaStateChanged_particle(QMediaPlayer::State state);
     void positionChanged_particle(qint64 position);
     void durationChanged_particle(qint64 duration);
-    void setPosition_particle(int position);
     void handleError();
 
     void mediaStateChanged_particle_2(QMediaPlayer::State state);
     void positionChanged_particle_2(qint64 position);
     void durationChanged_particle_2(qint64 duration);
-    void setPosition_particle_2(int position);
+
 
     void on_SaveChart_clicked();
 
@@ -111,14 +110,11 @@ private slots:
     void process_cal_FinishedSlot(int,QProcess::ExitStatus);
     void Tracking_image(int,QProcess::ExitStatus);
     void cellImg_cal_queue(int sender);
+    void SetVideo();
 
 
 private:
     QMediaPlayer mediaPlayer;
-    QMediaPlayer mediaPlayer_2;
-    QMediaPlayer mediaPlayer_3;
-    QMediaPlayer mediaPlayer_4;
-    QMediaPlayer mediaPlayer_5;
     Ui::VideoPlayer *ui;
     QChart *createLineChart(QString path, int index) const;
 
