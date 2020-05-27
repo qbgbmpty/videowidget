@@ -74,8 +74,7 @@ public:
     ~VideoPlayer();
 
 signals:
-    void cal_trigger(int sender);
-    void cell_image_trigger(int sender);
+    void cal_trigger();
     void set_variable();
 
 public slots:
@@ -105,12 +104,13 @@ private slots:
 
     void on_SaveChart_clicked();
 
-    void processFinishedSlot(int,QProcess::ExitStatus);
+    void processFinishedSlot();
     void process2FinishedSlot(int,QProcess::ExitStatus);
     void process_cal_FinishedSlot(int,QProcess::ExitStatus);
     void Tracking_image(int,QProcess::ExitStatus);
-    void cellImg_cal_queue(int sender);
+    void cellImg_cal_queue();
     void SetVideo();
+    void SortDisFile();
 
 
 private:
