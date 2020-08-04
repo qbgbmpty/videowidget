@@ -37,7 +37,7 @@
 #include <QTime>
 
 
-QStringList fileName;
+//QStringList fileName;
 static QProcess *_process;
 static QProcess *_process2;
 static QProcess *_process_cal;
@@ -54,11 +54,8 @@ QString saveCellBorderPath;
 QString saveCellFullPath;
 QString saveCellCenterPath;
 QString saveCellAreaPath;
-QString Particle_1;
-QString Particle_2;
 int count,dis_count, processParticle, processCell, obj_num, cellImg_count, cal_count,img_count;
 int tracking_count,current_dis,test;
-QString FirstParticle;
 QTime test_time;
 double **DisList;
 int **recordObjectProcess;
